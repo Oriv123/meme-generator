@@ -3,18 +3,21 @@
 var gCanvas
 var gCtx
 var gFirstLoad = true
+var gIsLocalImg = false
+var gLocalImg
 
 function renderCanvas() {
     gCanvas = document.querySelector('#meme-canvas')
     gCtx = gCanvas.getContext('2d')
+
     if (isMobileDevice() && gFirstLoad) resizeCanvas()
-    drawImg()
+
+    if (gIsLocalImg) drawLocalImg(gLocalImg)
+    else drawImg()
+
     renderText()
-
     window.addEventListener('keydown', doKeyDown, true)
-
     addDragDrop()
-
 }
 
 function isMobileDevice() {
@@ -27,6 +30,10 @@ function resizeCanvas() {
     changePosForMobile(window.innerWidth - 20)
     document.querySelector('.meme-control').style.width = `"${window.innerWidth}px"`
     gFirstLoad = false
+}
+
+function drawLocalImg() {
+    gCtx.drawImage(gLocalImg, 0, 0, gCanvas.width, gCanvas.height);
 }
 
 function drawImg() {
@@ -112,6 +119,7 @@ function onAddLine() {
 
 function onDownloadCanvas(elLink) {
     const data = gCanvas.toDataURL()
+    console.log(data)
     elLink.href = data
     elLink.download = 'Img'
 }
@@ -131,37 +139,56 @@ function uploadImg(elForm, ev) {
 function doUploadImg(elForm, onSuccess) {
     var formData = new FormData(elForm)
     fetch('http://ca-upload.com/here/upload.php', {
-            method: 'POST',
-            body: formData
-        })
-        .then(function(res) {
+        method: 'POST',
+        body: formData
+    })
+        .then(function (res) {
             return res.text()
         })
         .then(onSuccess)
-        .catch(function(err) {
+        .catch(function (err) {
             console.error(err)
         })
 }
 
+function onUploadImg(ev) {
+    loadImageFromInput(ev, renderCanvas)
+    gIsLocalImg = true
+}
+function loadImageFromInput(ev, onImageReady) {
+    var reader = new FileReader();
+
+    reader.onload = function (event) {
+        gLocalImg = new Image();
+        gLocalImg.onload = onImageReady.bind(null, gLocalImg)
+        gLocalImg.src = event.target.result;
+    }
+    reader.readAsDataURL(ev.target.files[0]);
+}
+
+
+function onSaveToStorage() {
+    const data = gCanvas.toDataURL()
+    saveImg(data)
+    saveAndRestartMeme()
+    onGetMemePage()
+}
+
 function doKeyDown(ev) {
     switch (ev.keyCode) {
-        case 38:
-            /* Up */
+        case 38:  /* Up */
             ev.preventDefault()
             onChangePositionY(-2)
             break;
-        case 40:
-            /* Down */
+        case 40:  /* Down */
             ev.preventDefault()
             onChangePositionY(2)
             break;
-        case 37:
-            /* Left */
+        case 37:  /* Left */
             ev.preventDefault()
             onChangePositionX(-2)
             break;
-        case 39:
-            /* Right */
+        case 39:  /* Right */
             ev.preventDefault()
             onChangePositionX(2)
             break;
@@ -203,7 +230,7 @@ function dragText(ev) {
     var meme = getMeme()
     var lines = meme.lines
     var idx = 0
-    lines.forEach(function(line) {
+    lines.forEach(function (line) {
         if (offsetX > line.positionX - 150 &&
             offsetX < line.positionX + 150 &&
             offsetY > line.positionY - 50 &&
@@ -232,7 +259,7 @@ function dropText(ev) {
     var meme = getMeme()
     var lines = meme.lines
     var idx = 0
-    lines.forEach(function(line) {
+    lines.forEach(function (line) {
         if (line.isDragging) {
             updateDragging(idx, false)
             return
@@ -269,7 +296,7 @@ function moveText(ev) {
 
         var meme = getMeme()
         var lines = meme.lines
-        lines.forEach(function(line) {
+        lines.forEach(function (line) {
             if (line.isDragging) {
                 changePositionX(disX)
                 changePositionY(disY)
