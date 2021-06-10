@@ -1,4 +1,7 @@
+'use strict'
+
 var openMenu = false
+
 function toggleMenu() {
     document.body.classList.toggle('menu-open')
     document.querySelector('.menu-btn').classList.toggle('is-active')

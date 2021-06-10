@@ -1,83 +1,83 @@
+'use strict'
+
 var gKeywords = {
     'happy': 12,
     'funny puk': 1
 }
 
-var gImgs = [
-    {
-        id: 1,
-        url: 'img/1.jpg',
-        // keywords: ['happy']
-    }, {
-        id: 2,
-        url: 'img/2.jpg',
-        // keywords: ['happy']
-    }, {
-        id: 3,
-        url: 'img/3.jpg',
-        // keywords: ['happy']
-    }, {
-        id: 4,
-        url: 'img/4.jpg',
-        // keywords: ['happy']
-    }, {
-        id: 5,
-        url: 'img/5.jpg',
-        // keywords: ['happy']
-    }, {
-        id: 6,
-        url: 'img/6.jpg',
-        // keywords: ['happy']
-    }, {
-        id: 7,
-        url: 'img/7.jpg',
-        // keywords: ['happy']
-    }, {
-        id: 8,
-        url: 'img/8.jpg',
-        // keywords: ['happy']
-    }, {
-        id: 9,
-        url: 'img/9.jpg',
-        // keywords: ['happy']
-    }, {
-        id: 10,
-        url: 'img/10.jpg',
-        // keywords: ['happy']
-    }, {
-        id: 11,
-        url: 'img/11.jpg',
-        // keywords: ['happy']
-    }, {
-        id: 12,
-        url: 'img/12.jpg',
-        // keywords: ['happy']
-    }, {
-        id: 13,
-        url: 'img/13.jpg',
-        // keywords: ['happy']
-    }, {
-        id: 14,
-        url: 'img/14.jpg',
-        // keywords: ['happy']
-    }, {
-        id: 15,
-        url: 'img/15.jpg',
-        // keywords: ['happy']
-    }, {
-        id: 16,
-        url: 'img/16.jpg',
-        // keywords: ['happy']
-    }, {
-        id: 17,
-        url: 'img/17.jpg',
-        // keywords: ['happy']
-    }, {
-        id: 19,
-        url: 'img/18.jpg',
-        // keywords: ['happy']
-    }
-]
+var gImgs = [{
+    id: 1,
+    url: 'img/1.jpg',
+    // keywords: ['happy']
+}, {
+    id: 2,
+    url: 'img/2.jpg',
+    // keywords: ['happy']
+}, {
+    id: 3,
+    url: 'img/3.jpg',
+    // keywords: ['happy']
+}, {
+    id: 4,
+    url: 'img/4.jpg',
+    // keywords: ['happy']
+}, {
+    id: 5,
+    url: 'img/5.jpg',
+    // keywords: ['happy']
+}, {
+    id: 6,
+    url: 'img/6.jpg',
+    // keywords: ['happy']
+}, {
+    id: 7,
+    url: 'img/7.jpg',
+    // keywords: ['happy']
+}, {
+    id: 8,
+    url: 'img/8.jpg',
+    // keywords: ['happy']
+}, {
+    id: 9,
+    url: 'img/9.jpg',
+    // keywords: ['happy']
+}, {
+    id: 10,
+    url: 'img/10.jpg',
+    // keywords: ['happy']
+}, {
+    id: 11,
+    url: 'img/11.jpg',
+    // keywords: ['happy']
+}, {
+    id: 12,
+    url: 'img/12.jpg',
+    // keywords: ['happy']
+}, {
+    id: 13,
+    url: 'img/13.jpg',
+    // keywords: ['happy']
+}, {
+    id: 14,
+    url: 'img/14.jpg',
+    // keywords: ['happy']
+}, {
+    id: 15,
+    url: 'img/15.jpg',
+    // keywords: ['happy']
+}, {
+    id: 16,
+    url: 'img/16.jpg',
+    // keywords: ['happy']
+}, {
+    id: 17,
+    url: 'img/17.jpg',
+    // keywords: ['happy']
+}, {
+    id: 19,
+    url: 'img/18.jpg',
+    // keywords: ['happy']
+}]
 
 var gMeme = {
     selectedImgId: 0,
@@ -90,7 +90,8 @@ var gMeme = {
         OutlineColor: 'black',
         fillColor: 'white',
         positionX: 225,
-        positionY: 50
+        positionY: 50,
+        isDragging: false
     }, {
         txt: 'I love Falafel',
         font: 'impact',
@@ -99,7 +100,8 @@ var gMeme = {
         OutlineColor: 'black',
         fillColor: 'white',
         positionX: 225,
-        positionY: 430
+        positionY: 430,
+        isDragging: false
     }],
 }
 
@@ -180,11 +182,18 @@ function switchLines() {
     else gMeme.selectedLineIdx++
 }
 
+function switchLinesDrogDrop(idx) {
+    gMeme.selectedLineIdx = idx
+}
+
+function updateDragging(idx, bool) {
+    gMeme.lines[idx].isDragging = bool
+}
+
 function deleteLine() {
     if (gMeme.lines.length === 0) return
     const lineIdx = gMeme.selectedLineIdx
     gMeme.lines.splice(lineIdx, 1)
-
 }
 
 function addLine() {
@@ -201,4 +210,3 @@ function addLine() {
     gMeme.lines.push(line)
     gMeme.selectedLineIdx = gMeme.lines.length - 1
 }
-
