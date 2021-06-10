@@ -3,31 +3,41 @@
 var gCanvas
 var gCtx
 var gFirstLoad = true
+var gFirstLoadStickers = true
 var gIsLocalImg = false
 var gLocalImg
+var gNoFocus = false
+var gDragOn = false
+var gFocustxt = true
+var gFocusSticker = false
+var gCurrPosX
+var gCurrPosY
+
 
 function renderCanvas() {
     gCanvas = document.querySelector('#meme-canvas')
     gCtx = gCanvas.getContext('2d')
 
     if (isMobileDevice() && gFirstLoad) resizeCanvas()
-
     if (gIsLocalImg) drawLocalImg(gLocalImg)
     else drawImg()
 
-    renderText()
-    window.addEventListener('keydown', doKeyDown, true)
-    addDragDrop()
-}
+    if (!gNoFocus) drawFocusRect()
+    else gNoFocus = false
 
-function isMobileDevice() {
-    return (window.innerWidth < 500)
+
+    renderText()
+    drawStickers()
+
+    addDragDrop()
+
+    onChangePage(0)
 }
 
 function resizeCanvas() {
-    gCanvas.width = window.innerWidth - 20
-    gCanvas.height = window.innerWidth - 20
-    changePosForMobile(window.innerWidth - 20)
+    gCanvas.width = window.innerWidth - 15
+    gCanvas.height = window.innerWidth - 15
+    changePosForMobile(window.innerWidth - 15)
     document.querySelector('.meme-control').style.width = `"${window.innerWidth}px"`
     gFirstLoad = false
 }
@@ -53,7 +63,8 @@ function renderText() {
 }
 
 function drawText(line) {
-    // gCtx.lineWidth = '0.1'
+    gCtx.setLineDash([])
+    gCtx.lineWidth = '1'
     gCtx.strokeStyle = line.OutlineColor
     gCtx.fillStyle = line.fillColor
     gCtx.font = `${line.size}px ${line.font}`
@@ -62,8 +73,36 @@ function drawText(line) {
     gCtx.strokeText(line.txt, line.positionX, line.positionY)
 }
 
+
+function drawFocusRect() {
+    var meme = getMeme()
+    if (gFocustxt) {
+        if (gMeme.lines.length === 0) return
+        var line = meme.lines[meme.selectedLineIdx]
+        var posX = line.positionX
+        var posY = line.positionY
+        gCtx.beginPath()
+        gCtx.rect(posX - 160, posY - 40, 320, 50)
+        gCtx.setLineDash([4, 4])
+        gCtx.strokeStyle = 'black'
+        gCtx.stroke()
+    }
+    if (gFocusSticker) {
+        var sticker = meme.stickers[meme.selectedStickerIdx]
+        var posX = sticker.positionX
+        var posY = sticker.positionY
+        gCtx.beginPath()
+        gCtx.rect(posX - 10, posY - 10, sticker.width + 20, sticker.height + 20)
+        gCtx.setLineDash([4, 4])
+        gCtx.strokeStyle = 'black'
+        gCtx.stroke()
+    }
+}
+
 function onChangeText(txt) {
     changeText(txt)
+    gFocustxt = true
+    gFocusSticker = false
     renderCanvas()
 }
 
@@ -104,6 +143,8 @@ function onChangePositionX(num) {
 
 function onSwitchLines() {
     switchLines()
+    gFocustxt = true
+    gFocusSticker = false
     renderCanvas()
 }
 
@@ -114,12 +155,15 @@ function onDeleteLine() {
 
 function onAddLine() {
     addLine()
+    gFocustxt = true
+    gFocusSticker = false
     renderCanvas()
 }
 
 function onDownloadCanvas(elLink) {
+    gNoFocus = true
+    renderCanvas()
     const data = gCanvas.toDataURL()
-    console.log(data)
     elLink.href = data
     elLink.download = 'Img'
 }
@@ -127,18 +171,19 @@ function onDownloadCanvas(elLink) {
 
 function uploadImg(elForm, ev) {
     ev.preventDefault()
+    gNoFocus = true
+    renderCanvas()
     document.getElementById('imgData').value = gCanvas.toDataURL("image/jpeg")
-
     function onSuccess(uploadedImgUrl) {
         uploadedImgUrl = encodeURIComponent(uploadedImgUrl)
-        window.open(`https://www.facebook.com/sharer/sharer.php?u=${uploadedImgUrl}&t=${uploadedImgUrl}`)
+        window.open(`https://www.facebook.com/sharer.php?u=${uploadedImgUrl}&t=${uploadedImgUrl}`)
     }
     doUploadImg(elForm, onSuccess)
 }
 
 function doUploadImg(elForm, onSuccess) {
     var formData = new FormData(elForm)
-    fetch('http://ca-upload.com/here/upload.php', {
+    fetch('https://ca-upload.com/here/upload.php', {
         method: 'POST',
         body: formData
     })
@@ -155,6 +200,7 @@ function onUploadImg(ev) {
     loadImageFromInput(ev, renderCanvas)
     gIsLocalImg = true
 }
+
 function loadImageFromInput(ev, onImageReady) {
     var reader = new FileReader();
 
@@ -166,40 +212,16 @@ function loadImageFromInput(ev, onImageReady) {
     reader.readAsDataURL(ev.target.files[0]);
 }
 
-
 function onSaveToStorage() {
+    gFocustxt = false
+    gFocusSticker = false
+    gNoFocus = true
+    renderCanvas()
     const data = gCanvas.toDataURL()
     saveImg(data)
     saveAndRestartMeme()
     onGetMemePage()
 }
-
-function doKeyDown(ev) {
-    switch (ev.keyCode) {
-        case 38:  /* Up */
-            ev.preventDefault()
-            onChangePositionY(-2)
-            break;
-        case 40:  /* Down */
-            ev.preventDefault()
-            onChangePositionY(2)
-            break;
-        case 37:  /* Left */
-            ev.preventDefault()
-            onChangePositionX(-2)
-            break;
-        case 39:  /* Right */
-            ev.preventDefault()
-            onChangePositionX(2)
-            break;
-    }
-}
-
-
-
-var gDragOn = false
-var gCurrPosX
-var gCurrPosY
 
 function addDragDrop() {
     gCanvas.addEventListener('mousedown', dragText)
@@ -231,23 +253,47 @@ function dragText(ev) {
     var lines = meme.lines
     var idx = 0
     lines.forEach(function (line) {
-        if (offsetX > line.positionX - 150 &&
-            offsetX < line.positionX + 150 &&
-            offsetY > line.positionY - 50 &&
+        if (offsetX > line.positionX - 160 &&
+            offsetX < line.positionX + 160 &&
+            offsetY > line.positionY - 40 &&
             offsetY < line.positionY + 10) {
             switchLinesDrogDrop(idx)
-            updateDragging(idx, true)
+            updateDragging(idx, 'lines', true)
             document.querySelector('.control-txt-input').value = line.txt
+            renderCanvas()
             gDragOn = true
+            gFocustxt = true
+            gFocusSticker = false
             return
         }
         idx++
     })
 
+
+
+    var stickers = meme.stickers
+    var idx = 0
+    stickers.forEach(function (sticker) {
+        if (offsetX > sticker.positionX - 10 &&
+            offsetX < sticker.positionX + sticker.width + 10 &&
+            offsetY > sticker.positionY - 10 &&
+            offsetY < sticker.positionY + sticker.height + 10) {
+            switchStickersDrogDrop(idx)
+            updateDragging(idx, 'stickers', true)
+            renderCanvas()
+            gDragOn = true
+            gFocusSticker = true
+            gFocustxt = false
+            return
+        }
+        idx++
+    })
+
+
     gCurrPosX = offsetX
     gCurrPosY = offsetY
+    renderCanvas()
 }
-
 
 function dropText(ev) {
 
@@ -257,21 +303,33 @@ function dropText(ev) {
     gDragOn = false
 
     var meme = getMeme()
-    var lines = meme.lines
-    var idx = 0
-    lines.forEach(function (line) {
-        if (line.isDragging) {
-            updateDragging(idx, false)
-            return
-        }
-        idx++
-    })
+    if (gFocustxt) {
+        var lines = meme.lines
+        var idx = 0
+        lines.forEach(function (line) {
+            if (line.isDragging) {
+                updateDragging(idx, 'lines', false)
+                return
+            }
+            idx++
+        })
+    }
+
+    if (gFocusSticker) {
+        var stickers = meme.stickers
+        var idx = 0
+        stickers.forEach(function (sticker) {
+            if (sticker.isDragging) {
+                updateDragging(idx, 'stickers', false)
+                return
+            }
+            idx++
+        })
+    }
 
     gCurrPosX = undefined
     gCurrPosY = undefined
 }
-
-
 
 
 function moveText(ev) {
@@ -295,17 +353,109 @@ function moveText(ev) {
         var disY = offsetY - gCurrPosY;
 
         var meme = getMeme()
-        var lines = meme.lines
-        lines.forEach(function (line) {
-            if (line.isDragging) {
-                changePositionX(disX)
-                changePositionY(disY)
-            }
-        })
+
+        if (gFocustxt) {
+            var lines = meme.lines
+            lines.forEach(function (line) {
+                if (line.isDragging) {
+                    changePositionX(disX)
+                    changePositionY(disY)
+                }
+            })
+        }
+
+        if (gFocusSticker) {
+            var stickers = meme.stickers
+            stickers.forEach(function (sticker) {
+                if (sticker.isDragging) {
+                    changePositionX(disX)
+                    changePositionY(disY)
+                }
+            })
+        }
+
 
         renderCanvas()
 
         gCurrPosX = offsetX;
         gCurrPosY = offsetY;
     }
+}
+
+
+function onRenderStickers() {
+    var stickers = getStickers()
+    var strHtml = '<button class="stickers-btn" onclick="onChangePage(-1)"><img src="icons/stickers-left.png"></button><div class="stickers">'
+    stickers.forEach(sticker => {
+        strHtml += `<img src="${sticker.url}" class="sticker" id="sticker-num-${sticker.id}" onclick="drawSticker(${sticker.id})">`
+    })
+    strHtml += '</div><button class="stickers-btn" onclick="onChangePage(1)"><img src="icons/stickers-rigth.png"></button>'
+    document.querySelector('.stickers-div').innerHTML = strHtml
+    onAddSizedToStickers()
+}
+
+function onAddSizedToStickers() {
+    var stickers = getStickers()
+    stickers.forEach(sticker => {
+        var width = document.querySelector(`#sticker-num-${sticker.id}`).width
+        var height = document.querySelector(`#sticker-num-${sticker.id}`).height
+        if (gFirstLoadStickers) addSizedToStickers(sticker.id, width, height)
+    })
+    gFirstLoadStickers = false
+    onAddStickersInPage()
+}
+
+function onAddStickersInPage() {
+    var stickers = getStickersForDisplay()
+    stickers.forEach(sticker => {
+        var elSticker = document.querySelector(`#sticker-num-${sticker.id}`)
+        elSticker.style.display = "inline-block"
+    })
+}
+
+
+function drawSticker(stickerId) {
+    var stickers = getStickers()
+    var sticker = stickers[stickerId - 1]
+    var elSticker = document.querySelector(`#sticker-num-${stickerId}`)
+    gCtx.drawImage(elSticker, sticker.positionX, sticker.positionY)
+    addSticker(sticker)
+    gFocusSticker = true
+    gFocustxt = false
+    renderCanvas()
+}
+
+function drawStickers() {
+    var meme = getMeme()
+    var stickers = meme.stickers
+    if (stickers.length === 0) return
+    else stickers.forEach(sticker => {
+        var elSticker = document.querySelector(`#sticker-num-${sticker.id}`)
+        gCtx.drawImage(elSticker, sticker.positionX, sticker.positionY, sticker.width, sticker.height)
+    })
+}
+
+
+
+var gCurrPage = 1
+var gStickersInPage = 3
+
+
+function onChangePage(diff) {
+    changePage(diff)
+    onRenderStickers()
+}
+
+function changePage(diff) {
+    gCurrPage += diff
+    var lastPage = Math.ceil(gStickers.length / gStickersInPage)
+    if (gCurrPage > lastPage) gCurrPage = 1
+    else if (gCurrPage < 1) gCurrPage = lastPage
+}
+
+
+function getStickersForDisplay() {
+    var from = (gCurrPage - 1) * gStickersInPage
+    var to = from + gStickersInPage
+    return gStickers.slice(from, to)
 }
