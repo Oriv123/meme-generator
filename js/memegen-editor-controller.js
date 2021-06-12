@@ -3,7 +3,6 @@
 var gCanvas
 var gCtx
 var gFirstLoad = true
-var gFirstLoadStickers = true
 var gIsLocalImg = false
 var gLocalImg
 var gNoFocus = false
@@ -18,27 +17,34 @@ function renderCanvas() {
     gCanvas = document.querySelector('#meme-canvas')
     gCtx = gCanvas.getContext('2d')
 
-    if (isMobileDevice() && gFirstLoad) resizeCanvas()
+    if (gFirstLoad) resizeCanvas()
+
     if (gIsLocalImg) drawLocalImg(gLocalImg)
     else drawImg()
 
     if (!gNoFocus) drawFocusRect()
     else gNoFocus = false
 
-
     renderText()
     drawStickers()
-
     addDragDrop()
-
     onChangePage(0)
 }
 
 function resizeCanvas() {
-    gCanvas.width = window.innerWidth - 15
-    gCanvas.height = window.innerWidth - 15
-    changePosForMobile(window.innerWidth - 15)
-    document.querySelector('.meme-control').style.width = `"${window.innerWidth}px"`
+    var imgId = getSelectedImg()
+    var elImg = document.querySelector(`#img-num-${imgId}`)
+    var ratio = elImg.width / elImg.height
+
+    if (isMobileDevice()) {
+        gCanvas.width = window.innerWidth - 15
+        gCanvas.height = (gCanvas.width / ratio)
+        document.querySelector('.meme-control').style.width = `"${window.innerWidth}px"`
+    } else {
+        gCanvas.width = 500
+        gCanvas.height = (gCanvas.width / ratio)
+    }
+    changePosTexts(gCanvas.width, gCanvas.height)
     gFirstLoad = false
 }
 
@@ -77,7 +83,7 @@ function drawText(line) {
 function drawFocusRect() {
     var meme = getMeme()
     if (gFocustxt) {
-        if (gMeme.lines.length === 0) return
+        if (meme.lines.length === 0) return
         var line = meme.lines[meme.selectedLineIdx]
         var posX = line.positionX
         var posY = line.positionY
@@ -100,24 +106,28 @@ function drawFocusRect() {
 }
 
 function onChangeText(txt) {
-    changeText(txt)
+    editMeme('txt', txt)
+        // changeText(txt)
     gFocustxt = true
     gFocusSticker = false
     renderCanvas()
 }
 
 function onChangeAlign(align) {
-    changeAlign(align)
+    editMeme('align', align)
+        // changeAlign(align)
     renderCanvas()
 }
 
 function onChangeOutlineColor(value) {
-    changeOutlineColor(value)
+    editMeme('OutlineColor', value)
+        // changeOutlineColor(value)
     renderCanvas()
 }
 
 function onChangeFillColor(value) {
-    changeFillColor(value)
+    editMeme('fillColor', value)
+        // changeFillColor(value)
     renderCanvas()
 }
 
@@ -127,7 +137,8 @@ function onChangeSize(num) {
 }
 
 function onChangeFont(font) {
-    changeFont(font)
+    editMeme('font', font)
+        // changeFont(font)
     renderCanvas()
 }
 
@@ -174,6 +185,7 @@ function uploadImg(elForm, ev) {
     gNoFocus = true
     renderCanvas()
     document.getElementById('imgData').value = gCanvas.toDataURL("image/jpeg")
+
     function onSuccess(uploadedImgUrl) {
         uploadedImgUrl = encodeURIComponent(uploadedImgUrl)
         window.open(`https://www.facebook.com/sharer.php?u=${uploadedImgUrl}&t=${uploadedImgUrl}`)
@@ -184,14 +196,14 @@ function uploadImg(elForm, ev) {
 function doUploadImg(elForm, onSuccess) {
     var formData = new FormData(elForm)
     fetch('https://ca-upload.com/here/upload.php', {
-        method: 'POST',
-        body: formData
-    })
-        .then(function (res) {
+            method: 'POST',
+            body: formData
+        })
+        .then(function(res) {
             return res.text()
         })
         .then(onSuccess)
-        .catch(function (err) {
+        .catch(function(err) {
             console.error(err)
         })
 }
@@ -204,7 +216,7 @@ function onUploadImg(ev) {
 function loadImageFromInput(ev, onImageReady) {
     var reader = new FileReader();
 
-    reader.onload = function (event) {
+    reader.onload = function(event) {
         gLocalImg = new Image();
         gLocalImg.onload = onImageReady.bind(null, gLocalImg)
         gLocalImg.src = event.target.result;
@@ -252,7 +264,7 @@ function dragText(ev) {
     var meme = getMeme()
     var lines = meme.lines
     var idx = 0
-    lines.forEach(function (line) {
+    lines.forEach(function(line) {
         if (offsetX > line.positionX - 160 &&
             offsetX < line.positionX + 160 &&
             offsetY > line.positionY - 40 &&
@@ -273,7 +285,7 @@ function dragText(ev) {
 
     var stickers = meme.stickers
     var idx = 0
-    stickers.forEach(function (sticker) {
+    stickers.forEach(function(sticker) {
         if (offsetX > sticker.positionX - 10 &&
             offsetX < sticker.positionX + sticker.width + 10 &&
             offsetY > sticker.positionY - 10 &&
@@ -306,7 +318,7 @@ function dropText(ev) {
     if (gFocustxt) {
         var lines = meme.lines
         var idx = 0
-        lines.forEach(function (line) {
+        lines.forEach(function(line) {
             if (line.isDragging) {
                 updateDragging(idx, 'lines', false)
                 return
@@ -318,7 +330,7 @@ function dropText(ev) {
     if (gFocusSticker) {
         var stickers = meme.stickers
         var idx = 0
-        stickers.forEach(function (sticker) {
+        stickers.forEach(function(sticker) {
             if (sticker.isDragging) {
                 updateDragging(idx, 'stickers', false)
                 return
@@ -356,7 +368,7 @@ function moveText(ev) {
 
         if (gFocustxt) {
             var lines = meme.lines
-            lines.forEach(function (line) {
+            lines.forEach(function(line) {
                 if (line.isDragging) {
                     changePositionX(disX)
                     changePositionY(disY)
@@ -366,7 +378,7 @@ function moveText(ev) {
 
         if (gFocusSticker) {
             var stickers = meme.stickers
-            stickers.forEach(function (sticker) {
+            stickers.forEach(function(sticker) {
                 if (sticker.isDragging) {
                     changePositionX(disX)
                     changePositionY(disY)
@@ -391,17 +403,6 @@ function onRenderStickers() {
     })
     strHtml += '</div><button class="stickers-btn" onclick="onChangePage(1)"><img src="icons/stickers-rigth.png"></button>'
     document.querySelector('.stickers-div').innerHTML = strHtml
-    onAddSizedToStickers()
-}
-
-function onAddSizedToStickers() {
-    var stickers = getStickers()
-    stickers.forEach(sticker => {
-        var width = document.querySelector(`#sticker-num-${sticker.id}`).width
-        var height = document.querySelector(`#sticker-num-${sticker.id}`).height
-        if (gFirstLoadStickers) addSizedToStickers(sticker.id, width, height)
-    })
-    gFirstLoadStickers = false
     onAddStickersInPage()
 }
 
@@ -415,13 +416,21 @@ function onAddStickersInPage() {
 
 
 function drawSticker(stickerId) {
-    var stickers = getStickers()
-    var sticker = stickers[stickerId - 1]
-    var elSticker = document.querySelector(`#sticker-num-${stickerId}`)
-    gCtx.drawImage(elSticker, sticker.positionX, sticker.positionY)
-    addSticker(sticker)
-    gFocusSticker = true
-    gFocustxt = false
+    var meme = getMeme()
+    var isStickerExist = meme.stickers.find(sticker => sticker.id === stickerId)
+    if (isStickerExist) {
+        switchStickers(stickerId)
+        gFocustxt = false
+        gFocusSticker = true
+    } else {
+        var stickers = getStickers()
+        var sticker = stickers[stickerId - 1]
+        var elSticker = document.querySelector(`#sticker-num-${stickerId}`)
+        gCtx.drawImage(elSticker, sticker.positionX, sticker.positionY)
+        addSticker(sticker)
+        gFocusSticker = true
+        gFocustxt = false
+    }
     renderCanvas()
 }
 
@@ -434,8 +443,6 @@ function drawStickers() {
         gCtx.drawImage(elSticker, sticker.positionX, sticker.positionY, sticker.width, sticker.height)
     })
 }
-
-
 
 var gCurrPage = 1
 var gStickersInPage = 3
@@ -452,7 +459,6 @@ function changePage(diff) {
     if (gCurrPage > lastPage) gCurrPage = 1
     else if (gCurrPage < 1) gCurrPage = lastPage
 }
-
 
 function getStickersForDisplay() {
     var from = (gCurrPage - 1) * gStickersInPage

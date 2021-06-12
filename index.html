@@ -15,12 +15,18 @@
 
     <div class="screen" onclick="toggleMenu()"></div>
 
-    <nav class=" nav-container container">
+    <nav class="nav-container container">
         <img class="logo" src="icons/logo.png" />
         <ul class="nav">
-            <li class="nav-gallery" onclick="onGetGalleryPage()">Gallery</li>
-            <li class="nav-memes" onclick="onGetMemePage()">Memes</li>
-            <li class="nav-about" onclick="onGetAboutPage()">About</li>
+            <li class="nav-gallery" data-trans="gallery" onclick="onGetGalleryPage()">Gallery</li>
+            <li class="nav-memes" data-trans="memes" onclick="onGetMemePage()">Memes</li>
+            <li class="nav-about" data-trans="about" onclick="onGetAboutPage()">About</li>
+            <li class="nav-lang">
+                <select onchange="onSetLang(value)" class="lang-select">
+                    <option value="en" data-trans="english">English</option>
+                    <option value="he" data-trans="hebrew">Hebrew</option>
+                </select>
+            </li>
         </ul>
         <button class="menu-btn hamburger hamburger--slider" type="button" onclick="toggleMenu()">
             <span class="hamburger-box">
@@ -31,40 +37,18 @@
 
     <div class="search-container container">
         <div class="search-by-typing">
-            <input type="text" list="meme-theme" placeholder="Enter search keyword" onkeyup="onFilterMemes(value)">
+            <input type="text" list="meme-theme" data-trans="search-typing" placeholder="Enter search keyword" onkeyup="onFilterMemes(value)">
             <img src="icons/search-icon.png">
             <datalist id="meme-theme">
-                <option value="funny">
-                <option value="celebrity">
-                <option value="politic">
-                <option value="cute">
-                <option value="animal">
+                <option data-trans="funny" value="funny">
+                <option data-trans="celebrity" value="celebrity">
+                <option data-trans="politic" value="politic">
+                <option data-trans="cute" value="cute">
+                <option data-trans="animal" value="animal">
             </datalist>
         </div>
 
-        <div>
-            <button onclick="onFilterMemes('funny')" class="search-btn">funny</button>
-            <button onclick="onFilterMemes('celebrity')" class="search-btn">celebrity</button>
-            <button onclick="onFilterMemes('politic')" class="search-btn">politic</button>
-            <button onclick="onFilterMemes('cute')" class="search-btn">cute</button>
-            <button onclick="onFilterMemes('animal')" class="search-btn">animal</button>
-            <button onclick="onMore()" class="search-btn" style="text-decoration: underline;">more...</button>
-            <div class="search-more">
-                <button onclick="onFilterMemes('books')" class="search-btn">books</button>
-                <button onclick="onFilterMemes('comics')" class="search-btn">comics</button>
-                <button onclick="onFilterMemes('cartoon')" class="search-btn">cartoon</button>
-                <button onclick="onFilterMemes('baby')" class="search-btn">baby</button>
-                <button onclick="onFilterMemes('love')" class="search-btn">love</button>
-                <button onclick="onFilterMemes('sport')" class="search-btn">sport</button>
-                <button onclick="onFilterMemes('kid')" class="search-btn">kid</button>
-                <button onclick="onFilterMemes('dog')" class="search-btn">dog</button>
-                <button onclick="onFilterMemes('cat')" class="search-btn">cat</button>
-                <button onclick="onFilterMemes('drinks')" class="search-btn">drinks</button>
-                <button onclick="onFilterMemes('movie')" class="search-btn">movie</button>
-                <button onclick="onFilterMemes('tv')" class="search-btn">tv</button>
-                <button onclick="onFilterMemes('')" class="search-btn">all</button>
-            </div>
-        </div>
+        <div class="search-by-keywords"></div>
     </div>
 
     <div class="main-container container">
@@ -78,57 +62,53 @@
     <div class="canvas-container container">
         <canvas id="meme-canvas" height="450" width="450" style="border: 1px solid black;"></canvas>
         <div class="meme-control">
-            <input type="text" class="control-txt-input" value="" onkeyup="onChangeText(value)" title="Change Text">
+            <input type="text" class="control-txt-input" value="" onkeyup="onChangeText(value)" title="Change Text" data-trans="change-text">
             <div class="btn-group1">
-                <button class="control-btn" onclick="onSwitchLines()" title="Switch Text"><img
+                <button class="control-btn" onclick="onSwitchLines()" title="Switch Text" data-trans="switch-text"><img
                         src="icons/switch.png" /></button>
-                <button class="control-btn" onclick="onAddLine()" title="Add New Text"><img
+                <button class="control-btn" onclick="onAddLine()" title="Add New Text" data-trans="new-text"><img
                         src="icons/add.png" /></button>
-                <button class="control-btn" onclick="onDeleteLine()" title="Delete Text"><img
+                <button class="control-btn" onclick="onDeleteLine()" title="Delete Text" data-trans="delete-text"><img
                         src="icons/trash.png" /></button>
                 <input type="file" id="file" class="inputfile" name="image" onchange="onUploadImg(event)" />
-                <label for="file">Upload image</label>
+                <label for="file" data-trans="upload-img">Upload image</label>
             </div>
-            <button class="control-btn" onclick="onChangeSize(1)" title="Increase Text"><img
+            <button class="control-btn" onclick="onChangeSize(1)" title="Increase" data-trans="increase"><img
                     src="icons/increase-font.png" /></button>
-            <button class="control-btn" onclick="onChangeSize(-1)" title="Decrease Text"><img
+            <button class="control-btn" onclick="onChangeSize(-1)" title="Decrease" data-trans="decrease"><img
                     src="icons/decrease-font.png" /></button>
-            <button class="control-btn" onclick="onChangeAlign('right')" title="Align Left"><img
+            <button class="control-btn" onclick="onChangeAlign('right')" title="Align Left" data-trans="align_left"><img
                     src="icons/align-to-left.png" /></button>
-            <button class="control-btn" onclick="onChangeAlign('center')" title="Align Center"><img
-                    src="icons/align-center.png" /></button>
-            <button class="control-btn" onclick="onChangeAlign('left')" title="Align Right"><img
-                    src="icons/align-to-right.png" /></button>
-            <select class="control-select" onchange="onChangeFont(value)" title="Choose Font">
+            <button class="control-btn" onclick="onChangeAlign('center')" title="Align Center" data-trans="align_center"><img src="icons/align-center.png" /></button>
+            <button class="control-btn" onclick="onChangeAlign('left')" title="Align Right" data-trans="align_right"><img src="icons/align-to-right.png" /></button>
+            <select class="control-select" onchange="onChangeFont(value)" title="Choose Font" data-trans="font">
                 <option>Impact</option>
                 <option>Montserrat</option>
                 <option>Pacifico</option>
                 <option>Sacramento</option>
             </select>
-            <button class="control-btn">
-                <input class="control-color-input" type="color" onchange="onChangeOutlineColor(value)"
-                    title="Choose Outline color" />
-                <img src="icons/text-stroke.png"></button>
-            <button class="control-btn">
-                <input class="control-color-input" type="color" onchange="onChangeFillColor(value)"
-                    title="Choose color" />
-                <img src="icons/paint-board-and-brush.png"></button>
-            <button class="control-btn save-btn" onclick="onSaveToStorage()">Save</button>
-            <button class="control-btn download-btn"><a href="#" onclick="onDownloadCanvas(this)"
-                    download="">Download</a></button>
+            <button class="control-btn"><input class="control-color-input" type="color"
+                    onchange="onChangeOutlineColor(value)" title="Choose Outline color"
+                    data-trans="outline-color" /><img src="icons/text-stroke.png"></button>
+            <button class="control-btn"><input class="control-color-input" type="color"
+                    onchange="onChangeFillColor(value)" title="Choose color" data-trans="fill-color" /><img
+                    src="icons/paint-board-and-brush.png"></button>
+            <button class="control-btn save-btn" onclick="onSaveToStorage()" data-trans="save">Save</button>
+            <button class="control-btn download-btn"><a href="#" onclick="onDownloadCanvas(this)" download=""
+                    data-trans="download">Download</a></button>
             <form action="" method="POST" enctype="multipart/form-data" onsubmit="uploadImg(this, event)">
                 <input name="img" id="imgData" type="hidden" />
-                <button class="control-btn share-btn" type="submit" onsubmit="uploadImg(this, event)">Share on
+                <button class="control-btn share-btn" type="submit" onsubmit="uploadImg(this, event)" data-trans="share">Share on
                     FB</button></form>
-            <div class="stickers-div"></div>
+            <div class="stickers-div" title="Choose Stickers" data-trans="stickers"></div>
         </div>
     </div>
 
     <div class="about-container container">
         <img class="about-img" src="img/mar.jpg">
         <div class="about-info">
-            <h1>Marshall Eriksen</h1>
-            <p>is one of the five main characters of How I Met Your Mother</p>
+            <h1 data-trans="about-name">MemeGen</h1>
+            <p data-trans="about-info">is one of the five main characters of How I Met Your Mother, portrayed by Jason Segel</p>
             <div class="about-contact">
                 <button title="Linkedin"><img src="icons/linkedin-logo.png" /></button>
                 <button title="Facebook"><img src="icons/facebook-logo.png" /></button>
@@ -139,11 +119,12 @@
 
     <footer class="footer-container container">
         <img class="logo" src="icons/logo.png" />
-        <p>all rights reserved 2019</p>
+        <p data-trans="rights">all rights reserved 2019</p>
     </footer>
 
 
     <script src="js/util.js"></script>
+    <script src="js/memegn-i18n-service.js"></script>
     <script src="js/memegen-service.js"></script>
     <script src="js/memegen-gallery-controller.js"></script>
     <script src="js/memegen-editor-controller.js"></script>
